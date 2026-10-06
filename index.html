@@ -48,18 +48,18 @@
   .cert {
     container-type: inline-size;
     position: relative; width: 100%; aspect-ratio: 11 / 8.5; overflow: hidden;
-    background:
-      radial-gradient(ellipse at center, rgba(255,255,255,.7) 0%, rgba(255,255,255,0) 70%),
-      var(--paper);
+    background: var(--paper);
     box-shadow: 0 2px 6px rgba(31,46,74,.15), 0 18px 40px rgba(31,46,74,.18);
   }
   .frame { position: absolute; pointer-events: none; }
   .frame.outer { inset: 2.2cqw; border: .55cqw solid var(--ink); }
+  /* Striped band: an opaque striped layer with a paper panel laid over its centre.
+     (No transparency, opacity, or border-image, which iPhone's PDF maker mangles.) */
   .frame.band {
-    inset: 2.75cqw; border: .7cqw solid transparent;
-    border-image: repeating-linear-gradient(45deg, var(--tier) 0 .25cqw, var(--paper) .25cqw .5cqw) 1;
-    opacity: .55;
+    inset: 2.75cqw;
+    background: repeating-linear-gradient(45deg, var(--tier-soft) 0 .25cqw, var(--paper) .25cqw .5cqw);
   }
+  .frame.paper { inset: 3.45cqw; background: var(--paper); }
   .frame.inner { inset: 3.75cqw; border: .16cqw solid var(--gold); }
   .corner {
     position: absolute; width: 1.3cqw; height: 1.3cqw; background: var(--gold);
@@ -129,6 +129,7 @@
   <div class="cert" id="cert">
     <div class="frame outer"></div>
     <div class="frame band"></div>
+    <div class="frame paper"></div>
     <div class="frame inner"></div>
     <span class="corner tl"></span><span class="corner tr"></span>
     <span class="corner bl"></span><span class="corner br"></span>
@@ -181,7 +182,7 @@
       title: "Wizard of JustServology",
       abbr: "W.J.S.",
       color: "#5B3A8C",
-      reason: "the successful completion of all three groups of lessons"
+      reason: "the successful completion of the LearnJustServe course"
     }
   };
 
@@ -224,9 +225,17 @@
   degreeSelect.value = degreeKey;
   degreeSelect.addEventListener("change", () => applyDegree(degreeSelect.value));
 
+  /* Blend a colour with the paper colour, giving a solid lighter shade */
+  function softenColor(hex, amount) {
+    const a = hex.match(/\w\w/g).map(h => parseInt(h, 16));
+    const b = [0xFB, 0xF8, 0xEF];
+    return "rgb(" + a.map((v, i) => Math.round(v * amount + b[i] * (1 - amount))).join(",") + ")";
+  }
+
   function applyDegree(key) {
     const d = DEGREES[key];
     document.documentElement.style.setProperty("--tier", d.color);
+    document.documentElement.style.setProperty("--tier-soft", softenColor(d.color, 0.55));
     certDegree.textContent = d.title;
     certCitation.textContent =
       "with all the rights, privileges, and opportunities to serve thereunto appertaining, in recognition of " +
