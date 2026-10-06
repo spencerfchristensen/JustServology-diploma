@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JustServology Certificate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Pinyon+Script&family=Grenze+Gotisch:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1F2E4A;
+    --gold: #A8862F;
+    --gold-soft: #D9C48A;
+    --paper: #FBF8EF;
+    --desk: #E3E7ED;
+    --tier: #2F5D8C;
+    --blackletter: "Grenze Gotisch", "Old English Text MT", "Goudy Text MT", serif;
+    --script: "Pinyon Script", "Snell Roundhand", "Apple Chancery", cursive;
+    --serif: "Cormorant Garamond", Garamond, "Times New Roman", serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--desk); color: var(--ink); font-family: var(--serif); }
+
+  /* ---------- On-screen controls ---------- */
+  .controls {
+    max-width: 1100px; margin: 0 auto; padding: 24px 20px 8px;
+    display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 260px; }
+  .field label { font-size: 1.1rem; font-weight: 600; }
+  .field input, .field select {
+    font: inherit; font-size: 1.25rem; padding: 10px 12px;
+    border: 1px solid #8F99A8; border-radius: 6px; background: #fff; color: var(--ink);
+  }
+  .field[hidden] { display: none; }
+  button {
+    font: inherit; font-size: 1.2rem; font-weight: 600; padding: 11px 22px;
+    border: none; border-radius: 6px; background: var(--ink); color: #fff; cursor: pointer;
+  }
+  button:hover { background: #2B3F63; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .hint { max-width: 1100px; margin: 0 auto; padding: 4px 20px 18px; font-size: 1.1rem; line-height: 1.45; }
+  .hint.error { color: #8B1E1E; font-weight: 600; }
+  .stage { max-width: 1100px; margin: 0 auto; padding: 0 20px 48px; }
+
+  /* ---------- The certificate ---------- */
+  .cert {
+    container-type: inline-size;
+    position: relative; width: 100%; aspect-ratio: 11 / 8.5; overflow: hidden;
+    background: var(--paper);
+    box-shadow: 0 2px 6px rgba(31,46,74,.15), 0 18px 40px rgba(31,46,74,.18);
+  }
+  .frame { position: absolute; pointer-events: none; }
+  .frame.outer { inset: 2.2cqw; border: .55cqw solid var(--ink); }
+  /* Striped band: an opaque striped layer with a paper panel laid over its centre.
+     (No transparency, opacity, or border-image, which iPhone's PDF maker mangles.) */
+  .frame.band {
+    inset: 2.75cqw;
+    background: repeating-linear-gradient(45deg, var(--tier-soft) 0 .25cqw, var(--paper) .25cqw .5cqw);
+  }
+  .frame.paper { inset: 3.45cqw; background: var(--paper); }
+  .frame.inner { inset: 3.75cqw; border: .16cqw solid var(--gold); }
+  .corner {
+    position: absolute; width: 1.3cqw; height: 1.3cqw; background: var(--gold);
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+  .corner.tl { left: 3.83cqw; top: 3.83cqw; }
+  .corner.tr { left: calc(100% - 3.83cqw); top: 3.83cqw; }
+  .corner.bl { left: 3.83cqw; top: calc(100% - 3.83cqw); }
+  .corner.br { left: calc(100% - 3.83cqw); top: calc(100% - 3.83cqw); }
+
+  .content {
+    position: absolute; inset: 6cqw 7.5cqw 5.2cqw;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  }
+  .faculty { font-family: var(--blackletter); font-weight: 600; font-size: 3.9cqw; line-height: 1.1; margin: 0; }
+  .confers { font-style: italic; font-size: 1.9cqw; margin: 1.3cqw 0 0; }
+  .name {
+    font-family: var(--script); font-size: 6.2cqw; line-height: 1.3; margin: .3cqw 0 0;
+    min-width: 52cqw; padding: 0 3cqw; white-space: nowrap;
+    border-bottom: .14cqw solid var(--gold);
+  }
+  .name.empty { color: #BDB6A4; }
+  .degree-label { font-style: italic; font-size: 1.9cqw; margin: 1.3cqw 0 0; }
+  .degree { font-family: var(--blackletter); font-weight: 600; font-size: 4.7cqw; line-height: 1.15; color: var(--tier); margin: .4cqw 0 0; }
+  .citation { font-size: 1.75cqw; line-height: 1.5; max-width: 64cqw; margin: 1.3cqw 0 0; }
+
+  .footer {
+    margin-top: 3.2cqw; width: 100%;
+    display: grid; grid-template-columns: 1fr 15cqw 1fr; align-items: end; gap: 4cqw;
+  }
+  .sig .val { font-size: 2.1cqw; min-height: 3.4cqw; display: flex; align-items: flex-end; justify-content: center; padding-bottom: .3cqw; }
+  .sig .val.script { font-family: var(--script); font-size: 2.6cqw; }
+  .sig .line { border-top: .13cqw solid var(--ink); padding-top: .5cqw; font-size: 1.55cqw; font-style: italic; }
+  .seal { width: 15cqw; height: auto; display: block; margin-bottom: -1.2cqw; }
+
+  /* ---------- Printing ---------- */
+  @page { size: letter landscape; margin: 0; }
+  @media print {
+    body { background: none; }
+    .controls, .hint { display: none !important; }
+    .stage { max-width: none; margin: 0; padding: 0; }
+    .cert { width: 11in; height: 8.5in; aspect-ratio: auto; box-shadow: none; }
+    .name.empty { color: transparent; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <div class="field">
+    <label for="studentName">Your name, as you want it on the certificate</label>
+    <input id="studentName" type="text" maxlength="60" autocomplete="name" placeholder="Type your full name">
+  </div>
+  <div class="field" id="degreeField" hidden>
+    <label for="degreeSelect">Degree earned</label>
+    <select id="degreeSelect"></select>
+  </div>
+  <button id="printBtn" type="button">Print or save as PDF</button>
+</div>
+<p class="hint" id="hint">
+  Type your name, then choose <strong>Print or save as PDF</strong>. To keep a copy or email it to yourself,
+  pick “Save as PDF” as the printer, then attach the PDF to an email. Nothing you type here is sent or stored anywhere.
+</p>
+
+<div class="stage">
+  <div class="cert" id="cert">
+    <div class="frame outer"></div>
+    <div class="frame band"></div>
+    <div class="frame paper"></div>
+    <div class="frame inner"></div>
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+
+    <div class="content">
+      <h1 class="faculty">The Board of Regents of LearnJustServe</h1>
+      <p class="confers">upon the recommendation of the instructors, does hereby confer upon</p>
+      <p class="name empty" id="certName">Your Name Here</p>
+      <p class="degree-label">the degree of</p>
+      <h2 class="degree" id="certDegree"></h2>
+      <p class="citation" id="certCitation"></p>
+
+      <div class="footer">
+        <div class="sig">
+          <div class="val" id="certDate"></div>
+          <div class="line">Date conferred</div>
+        </div>
+        <svg class="seal" id="seal" viewBox="0 0 200 230" aria-hidden="true"></svg>
+        <div class="sig">
+          <div class="val script">JustServe Area Specialist</div>
+          <div class="line">JustServe Area Specialist</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ===== Edit degree wording here ===== */
+  const DEGREES = {
+    bachelor: {
+      title: "Bachelor of JustServology",
+      abbr: "B.J.S.",
+      color: "#2F5D8C",
+      reason: "the successful completion of the Group 1 lessons"
+    },
+    master: {
+      title: "Master of JustServology",
+      abbr: "M.J.S.",
+      color: "#2E6B4F",
+      reason: "the successful completion of the Group 2 lessons"
+    },
+    doctorate: {
+      title: "Doctorate of JustServology",
+      abbr: "D.J.S.",
+      color: "#7A2433",
+      reason: "the successful completion of the Group 3 lessons"
+    },
+    wizard: {
+      title: "Wizard of JustServology",
+      abbr: "W.J.S.",
+      color: "#5B3A8C",
+      reason: "the successful completion of the LearnJustServe course"
+    }
+  };
+
+  /* Accepted spellings for ?degree= in the link */
+  const ALIASES = {
+    bachelor: "bachelor", bachelors: "bachelor", ba: "bachelor", "1": "bachelor",
+    master: "master", masters: "master", ma: "master", "2": "master",
+    doctorate: "doctorate", doctor: "doctorate", phd: "doctorate", "3": "doctorate",
+    wizard: "wizard", grandwizard: "wizard", "grand-wizard": "wizard", "4": "wizard"
+  };
+
+  const nameInput = document.getElementById("studentName");
+  const certName = document.getElementById("certName");
+  const certDegree = document.getElementById("certDegree");
+  const certCitation = document.getElementById("certCitation");
+  const certDate = document.getElementById("certDate");
+  const degreeField = document.getElementById("degreeField");
+  const degreeSelect = document.getElementById("degreeSelect");
+  const hint = document.getElementById("hint");
+  const hintDefault = hint.innerHTML;
+  const cert = document.getElementById("cert");
+  const seal = document.getElementById("seal");
+
+  /* Today's date */
+  certDate.textContent = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+
+  /* Read ?degree= from the link */
+  const param = (new URLSearchParams(location.search).get("degree") || "").trim().toLowerCase();
+  let degreeKey = ALIASES[param];
+
+  for (const [key, d] of Object.entries(DEGREES)) {
+    const opt = document.createElement("option");
+    opt.value = key; opt.textContent = d.title;
+    degreeSelect.appendChild(opt);
+  }
+  if (!degreeKey) {
+    degreeKey = "bachelor";
+    degreeField.hidden = false;   /* no valid link parameter: let the student choose */
+  }
+  degreeSelect.value = degreeKey;
+  degreeSelect.addEventListener("change", () => applyDegree(degreeSelect.value));
+
+  /* Blend a colour with the paper colour, giving a solid lighter shade */
+  function softenColor(hex, amount) {
+    const a = hex.match(/\w\w/g).map(h => parseInt(h, 16));
+    const b = [0xFB, 0xF8, 0xEF];
+    return "rgb(" + a.map((v, i) => Math.round(v * amount + b[i] * (1 - amount))).join(",") + ")";
+  }
+
+  function applyDegree(key) {
+    const d = DEGREES[key];
+    document.documentElement.style.setProperty("--tier", d.color);
+    document.documentElement.style.setProperty("--tier-soft", softenColor(d.color, 0.55));
+    certDegree.textContent = d.title;
+    certCitation.textContent =
+      "with all the rights, privileges, and opportunities to serve thereunto appertaining, in recognition of " +
+      d.reason + ".";
+    document.title = d.title + " certificate";
+    drawSeal(d);
+  }
+
+  /* Build the wax-style seal */
+  function drawSeal(d) {
+    const NS = "http://www.w3.org/2000/svg";
+    const cx = 100, cy = 95;
+    let pts = [];
+    for (let i = 0; i < 48; i++) {
+      const r = i % 2 ? 80 : 90;
+      const a = (Math.PI * 2 * i) / 48;
+      pts.push((cx + r * Math.cos(a)).toFixed(1) + "," + (cy + r * Math.sin(a)).toFixed(1));
+    }
+    const isWizard = d.abbr.startsWith("W");
+    const centre = isWizard
+      ? `<defs>
+           <clipPath id="shieldClip"><path d="M74,58 H126 V86 Q126,111 100,122 Q74,111 74,86 Z"/></clipPath>
+         </defs>
+         <g clip-path="url(#shieldClip)">
+           <rect x="74" y="58" width="26" height="32" fill="#F5EBC8"/>
+           <rect x="100" y="58" width="26" height="32" fill="#3E2563"/>
+           <rect x="74" y="90" width="26" height="34" fill="#3E2563"/>
+           <rect x="100" y="90" width="26" height="34" fill="#F5EBC8"/>
+           <line x1="100" y1="56" x2="100" y2="124" stroke="#E9D79E" stroke-width="1.6"/>
+           <line x1="72" y1="90" x2="128" y2="90" stroke="#E9D79E" stroke-width="1.6"/>
+         </g>
+         <path d="M74,58 H126 V86 Q126,111 100,122 Q74,111 74,86 Z" fill="none" stroke="#E9D79E" stroke-width="2.4"/>
+         <!-- wizard hat -->
+         <polygon points="80.5,84 94.5,84 89,64" fill="${d.color}"/>
+         <ellipse cx="87.5" cy="84.3" rx="9" ry="2" fill="${d.color}"/>
+         <circle cx="88.3" cy="74" r="1.3" fill="#E9D79E"/>
+         <!-- star -->
+         <polygon points="113,65 115,71.2 121.5,71.2 116.3,75 118.3,81.2 113,77.4 107.7,81.2 109.7,75 104.5,71.2 111,71.2" fill="#E9D79E"/>
+         <!-- open book -->
+         <path d="M79.5,97 Q84,95.5 87,98 V107 Q84,104.8 79.5,106 Z M94.5,97 Q90,95.5 87,98 V107 Q90,104.8 94.5,106 Z" fill="#E9D79E"/>
+         <!-- heart of service -->
+         <path d="M113,107 C104.5,101 106,93.5 113,96.8 C120,93.5 121.5,101 113,107 Z" fill="${d.color}"/>
+         <!-- motto banner -->
+         <path d="M68,121 Q100,130 132,121 L134,133 Q100,142 66,133 Z" fill="#F5EBC8" stroke="#A8862F" stroke-width="1"/>
+         <text x="100" y="135" text-anchor="middle" font-family="Cormorant Garamond, serif" font-weight="600" font-size="10.5" letter-spacing="1" fill="${d.color}">${d.abbr}</text>`
+      : `<text x="100" y="104" text-anchor="middle" font-family="Cormorant Garamond, serif" font-weight="600" font-size="26" fill="#F5EBC8">${d.abbr}</text>`;
+    seal.innerHTML = `
+      <polygon points="62,150 46,226 70,212 86,232 98,160" fill="${d.color}" opacity=".9"/>
+      <polygon points="138,150 154,226 130,212 114,232 102,160" fill="${d.color}" opacity=".9"/>
+      <polygon points="${pts.join(" ")}" fill="#A8862F"/>
+      <circle cx="${cx}" cy="${cy}" r="74" fill="${d.color}"/>
+      <circle cx="${cx}" cy="${cy}" r="70" fill="none" stroke="#E9D79E" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="47" fill="none" stroke="#E9D79E" stroke-width="1"/>
+      <defs><path id="ring" d="M ${cx},${cy} m -58,0 a 58,58 0 1,1 116,0 a 58,58 0 1,1 -116,0"/></defs>
+      <text font-family="Cormorant Garamond, serif" font-weight="600" font-size="13" fill="#F5EBC8">
+        <textPath href="#ring" startOffset="0" textLength="358" lengthAdjust="spacing">LEARNJUSTSERVE ✦ BOARD OF REGENTS ✦</textPath>
+      </text>
+      ${centre}`;
+  }
+
+  /* Live name updates, shrinking long names to fit */
+  function fitName() {
+    const max = cert.clientWidth * 0.78;
+    let size = 6.2;
+    certName.style.fontSize = size + "cqw";
+    while (certName.scrollWidth > max && size > 3) {
+      size -= 0.2;
+      certName.style.fontSize = size + "cqw";
+    }
+  }
+  function updateName() {
+    const v = nameInput.value.trim();
+    certName.textContent = v || "Your Name Here";
+    certName.classList.toggle("empty", !v);
+    if (v) { hint.classList.remove("error"); hint.innerHTML = hintDefault; }
+    fitName();
+  }
+  nameInput.addEventListener("input", updateName);
+  window.addEventListener("resize", fitName);
+  window.addEventListener("beforeprint", () => requestAnimationFrame(fitName));
+  window.addEventListener("afterprint", fitName);
+
+  document.getElementById("printBtn").addEventListener("click", () => {
+    if (!nameInput.value.trim()) {
+      hint.classList.add("error");
+      hint.textContent = "Enter your name first, then choose Print or save as PDF.";
+      nameInput.focus();
+      return;
+    }
+    window.print();
+  });
+
+  applyDegree(degreeKey);
+  updateName();
+  if (document.fonts) document.fonts.ready.then(fitName);
+</script>
+</body>
+</html>
